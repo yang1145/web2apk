@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页转APK工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border: #dee2e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        
+        header h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .card-header i {
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        .card-header h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input[type="text"], 
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-label:hover {
+            border-color: var(--primary);
+            background: #f0f7ff;
+        }
+        
+        .file-upload-label i {
+            font-size: 40px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .file-upload-label span {
+            color: var(--gray);
+            font-weight: 500;
+        }
+        
+        .file-upload-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .icon-preview {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .icon-preview img {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+        
+        .directory-path {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-generate {
+            width: 100%;
+            margin-top: 10px;
+            font-size: 18px;
+            padding: 16px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-with-button input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-with-button input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-text {
+            display: block;
+            margin-top: 5px;
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .card {
+                padding: 20px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .card-header h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>网页转APK工具</h1>
+            <p>将您的网页项目快速转换为Android应用程序</p>
+        </header>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-mobile-alt"></i>
+                <h2>应用基本信息</h2>
+            </div>
+            
+            <div class="form-group">
+                <label for="app-name">应用名称</label>
+                <input type="text" id="app-name" placeholder="输入您的应用名称" value="我的网页应用">
+            </div>
+            
+            <div class="form-group">
+                <label for="package-name">包名</label>
+                <input type="text" id="package-name" placeholder="例如：com.company.appname" value="com.example.mywebapp">
+            </div>
+            
+            <div class="form-group">
+                <label for="app-version">版本号</label>
+                <input type="text" id="app-version" placeholder="例如：1.0.0" value="1.0.0">
+            </div>
+            
+            <div class="form-group">
+                <label for="version-code">版本代码</label>
+                <input type="text" id="version-code" placeholder="例如：1" value="1">
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-image"></i>
+                <h2>应用图标</h2>
+            </div>
+            
+            <div class="form-group">
+                <label>上传应用图标 (PNG格式，建议512x512像素)</label>
+                <div class="file-upload">
+                    <label class="file-upload-label">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>点击选择图标文件或拖放到此处</span>
+                        <input type="file" id="app-icon" class="file-upload-input" accept=".png,.jpg,.jpeg">
+                    </label>
+                </div>
+                
+                <div class="icon-preview">
+                    <img id="icon-preview" src="https://via.placeholder.com/512.png?text=图标预览" alt="图标预览">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-folder-open"></i>
+                <h2>网页目录选择</h2>
+            </div>
+            
+            <div class="form-group">
+                <label>选择网页项目目录</label>
+                <div class="file-upload">
+                    <label class="file-upload-label">
+                        <i class="fas fa-folder"></i>
+                        <span>点击选择网页目录或拖放到此处</span>
+                        <input type="file" id="web-directory" class="file-upload-input" webkitdirectory directory multiple>
+                    </label>
+                </div>
+                
+                <div class="directory-path">
+                    <p>已选择目录: <span id="directory-path">未选择</span></p>
+                    <p>文件数量: <span id="file-count">0</span></p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="main-page">主页面文件</label>
+                <select id="main-page">
+                    <option value="index.html">index.html</option>
+                    <option value="main.html">main.html</option>
+                    <option value="home.html">home.html</option>
+                </select>
+            </div>
+        </div>
+        
+        <button class="btn btn-generate">
+            <i class="fas fa-cog"></i> 生成APK文件
+        </button>
+        
+        <div class="footer">
+            <p>网页转APK工具 &copy; 2025 - 基于Node.js构建</p>
+        </div>
+    </div>
+
+    <script>
+        // 图标上传预览功能
+        const iconInput = document.getElementById('app-icon');
+        const iconPreview = document.getElementById('icon-preview');
+        
+        iconInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    iconPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 目录选择功能
+        const dirInput = document.getElementById('web-directory');
+        const dirPath = document.getElementById('directory-path');
+        const fileCount = document.getElementById('file-count');
+        
+        dirInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                // 获取目录路径（webkitdirectory情况下，文件的webkitRelativePath包含完整路径）
+                const path = files[0].webkitRelativePath.split('/')[0];
+                dirPath.textContent = path;
+                fileCount.textContent = files.length;
+            }
+        });
+        
+        // 生成APK按钮点击事件
+        document.querySelector('.btn-generate').addEventListener('click', function() {
+            const appName = document.getElementById('app-name').value;
+            const packageName = document.getElementById('package-name').value;
+            const appVersion = document.getElementById('app-version').value;
+            const versionCode = document.getElementById('version-code').value;
+            const mainPage = document.getElementById('main-page').value;
+            const appIcon = document.getElementById('app-icon').files[0];
+            const webDirectory = document.getElementById('web-directory').files;
+            
+            if (!appName || !packageName) {
+                alert('请填写应用名称和包名！');
+                return;
+            }
+            
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在生成...';
+            this.disabled = true;
+            
+            // 创建FormData对象
+            const formData = new FormData();
+            formData.append('appName', appName);
+            formData.append('packageName', packageName);
+            formData.append('appVersion', appVersion || '1.0.0');
+            formData.append('versionCode', versionCode || '1');
+            formData.append('mainPage', mainPage || 'index.html');
+            if (appIcon) {
+                formData.append('appIcon', appIcon);
+            }
+            
+            if (webDirectory.length > 0) {
+                // 注意：由于浏览器安全限制，我们不能直接上传整个目录
+                // 这里需要将所有文件添加到FormData中
+                for (let i = 0; i < webDirectory.length; i++) {
+                    formData.append('webDirectory', webDirectory[i]);
+                }
+            }
+            
+            // 发送请求到后端
+            fetch('/api/generate-apk', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('生成失败: ' + data.error);
+                } else {
+                    // 提供下载链接
+                    alert('APK生成成功！文件大小: ' + (data.fileSize / 1024 / 1024).toFixed(2) + ' MB');
+                    const a = document.createElement('a');
+                    a.href = data.downloadUrl;
+                    a.download = 'app.apk';
+                    a.click();
+                }
+            })
+            .catch(error => {
+                alert('请求失败: ' + error.message);
+            })
+            .finally(() => {
+                this.innerHTML = '<i class="fas fa-cog"></i> 生成APK文件';
+                this.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

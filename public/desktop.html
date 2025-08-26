@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页转APK工具 - 桌面版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border: #dee2e6;
+            --sidebar-width: 250px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark);
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        /* 顶部标题栏 */
+        .title-bar {
+            background: #2b2b2b;
+            color: white;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            -webkit-app-region: drag;
+        }
+        
+        .title-bar-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+        
+        /* 窗口边缘拖拽区域 */
+        .resize-edge {
+            position: absolute;
+            z-index: 9999;
+        }
+        
+        .resize-edge-top {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            cursor: n-resize;
+        }
+        
+        .resize-edge-right {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 5px;
+            cursor: e-resize;
+        }
+        
+        .resize-edge-bottom {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            cursor: s-resize;
+        }
+        
+        .resize-edge-left {
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 5px;
+            cursor: w-resize;
+        }
+        
+        .resize-corner {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            z-index: 10000;
+        }
+        
+        .resize-corner-tl {
+            top: 0;
+            left: 0;
+            cursor: nw-resize;
+        }
+        
+        .resize-corner-tr {
+            top: 0;
+            right: 0;
+            cursor: ne-resize;
+        }
+        
+        .resize-corner-bl {
+            bottom: 0;
+            left: 0;
+            cursor: sw-resize;
+        }
+        
+        .resize-corner-br {
+            bottom: 0;
+            right: 0;
+            cursor: se-resize;
+        }
+        
+        .control-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            color: #aaa;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .minimize-btn:hover {
+            background: #ffca3a;
+        }
+        
+        .maximize-btn:hover {
+            background: #4ade80;
+        }
+        
+        .close-btn:hover {
+            background: #ff595e;
+        }
+        
+        /* 主工作区 */
+        .work-area {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #main-webview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 标题栏 -->
+        <div class="title-bar">
+            <div class="title-bar-title">
+                <i class="fas fa-mobile-alt"></i>
+                <span>网页转APK工具 - 桌面版</span>
+            </div>
+            <div class="window-controls">
+                <button class="control-btn minimize-btn" id="minimize-btn" title="最小化">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="control-btn maximize-btn" id="maximize-btn" title="最大化">
+                    <i class="fas fa-square"></i>
+                </button>
+                <button class="control-btn close-btn" id="close-btn" title="关闭">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 窗口边缘拖拽区域 -->
+        <div class="resize-edge resize-edge-top"></div>
+        <div class="resize-edge resize-edge-right"></div>
+        <div class="resize-edge resize-edge-bottom"></div>
+        <div class="resize-edge resize-edge-left"></div>
+        <div class="resize-corner resize-corner-tl"></div>
+        <div class="resize-corner resize-corner-tr"></div>
+        <div class="resize-corner resize-corner-bl"></div>
+        <div class="resize-corner resize-corner-br"></div>
+        
+        <!-- 工作区 -->
+        <div class="work-area">
+            <iframe id="main-webview" src="index.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 窗口控制按钮
+            document.getElementById('minimize-btn').addEventListener('click', function() {
+                // 通过postMessage通知C#代码最小化窗口
+                try {
+                    window.chrome.webview.postMessage('{"action": "minimize"}');
+                } catch (e) {
+                    console.log('无法通过WebView2发送消息:', e);
+                }
+            });
+            
+            document.getElementById('maximize-btn').addEventListener('click', function() {
+                // 通过postMessage通知C#代码最大化/还原窗口
+                try {
+                    window.chrome.webview.postMessage('{"action": "maximize"}');
+                } catch (e) {
+                    console.log('无法通过WebView2发送消息:', e);
+                }
+            });
+            
+            document.getElementById('close-btn').addEventListener('click', function() {
+                if (confirm('确定要关闭应用程序吗？')) {
+                    // 通过postMessage通知C#代码关闭窗口
+                    try {
+                        window.chrome.webview.postMessage('{"action": "close"}');
+                    } catch (e) {
+                        console.log('无法通过WebView2发送消息:', e);
+                        // 如果无法通过WebView2发送消息，则直接关闭窗口
+                        window.close();
+                    }
+                }
+            });
+            
+            // 监听 iframe 加载状态
+            const webview = document.getElementById('main-webview');
+            webview.addEventListener('load', function() {
+                // 主界面加载完成
+            });
+        });
+    </script>
+</body>
+</html>
